@@ -1,30 +1,31 @@
+
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import os
+import re
 try:
     os.mkdir("datas")
 except:
-    print("ko")
+    print("Le dossier datas existe")
 
 # Scrap one page of one book   
 
-def scrapp_page_one_book(url_book_of_one_book):
-    reponse = requests.get(url_book_of_one_book)
-    page = reponse.content
-    soup = BeautifulSoup(page, 'html.parser')
+def scrap_page_one_book(url_book_of_one_book):
+    html_livre = requests.get(url_book_of_one_book).content
+    soup_livre = BeautifulSoup(html_livre, 'html.parser')
     table_livre=[]
     # url
     product_page_url = url_book_of_one_book
     
     # UPC
-    for td in soup.find_all('td'):
+    for td in soup_livre.find_all('td'):
         table_livre.append(td)
     upc= table_livre[0].text.strip()
 
     # title
-    title = soup.find('h1').string
+    title = soup_livre.find('h1').string
     
     # price avec tax
     price_including_tax= table_livre[2].text.strip()
@@ -36,7 +37,7 @@ def scrapp_page_one_book(url_book_of_one_book):
     number_available = table_livre[5].text.strip()
     
     # product_description
-    div_product_description = soup.find("article", class_="product_page")
+    div_product_description = soup_livre.find("article", class_="product_page")
     p_product_description = div_product_description.find_all('p')
 
     if p_product_description:
@@ -47,45 +48,39 @@ def scrapp_page_one_book(url_book_of_one_book):
 
     # category
     list_a = []
-    for a_href in soup.find_all("a"):
+    for a_href in soup_livre.find_all("a"):
         list_a.append(a_href.string)
     category = list_a[3]
     
     # review_rating
     review_rating = table_livre[6].text.strip()
     
-    # img_rul
-    img = soup.find_all('img')
-    for image in img:
-        image_url = image['src']
-        image_url.replace("../../", "http://books.toscrape.com/" )
+    # img_url
+    images = soup_livre.find_all('div', class_="item active")
+    for image in images:
+        image_url = image.find('img')['src']
+        image_url = image_url.replace("../../", "http://books.toscrape.com/")
+        download_image = requests.get(image_url).content
     
-    
+      
     datas_of_one_book = [product_page_url, upc, title, price_including_tax, price_excluding_tax, number_available,  prodcut_description, category, review_rating, image_url]
-    return datas_of_one_book, category 
     
-url_book_of_one_book = "http://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html"
-# scrapp_page_one_book(url_book_of_one_book)
+    name_image = re.sub(r'[^\w\s.-]', '', title)
+    if not os.path.exists("images"):
+        os.makedirs("images")
+    with open("images/" + name_image + ".jpg", "wb") as handler:
+        handler.write(download_image) 
+        
+    return datas_of_one_book, category 
 
-
-# vérifier si la page en cours a le bouton pour changer de page
-def check_next_page(page):
-    page_content = BeautifulSoup(page, "html.parser")
-    next_link = page_content.find(class_="next")
-    if next_link != None:
-        for a in next_link.find_all("a", href = True):
-            next_page = a["href"]
-        next_page_content = str(next_page).replace('<a href="", ""', "").replace('">next</a>', "")
-    else:
-        next_page_content= "404"
-    return next_page_content
-
-# TO DO : comment passer à la page suivante (pagination)
-def list_all_pages_of_category():
-    list_url_category = []
-    page_next = 1 
+# pagination
+def list_all_pages_of_category(url_page_category):
+    print(url_page_category)
+    list_url_category = [url_page_category]
+    url_page_category=url_page_category.replace("/index.html", "")   
+    page_next = 2
     while True:
-        url = f"http://books.toscrape.com/catalogue/category/books/mystery_3/page-{page_next}.html"
+        url = f"{url_page_category}/page-{page_next}.html"
         reponse = requests.get(url)
         page = reponse.status_code
         print(page)
@@ -96,6 +91,7 @@ def list_all_pages_of_category():
         else:
             break
     return list_url_category
+
 # CSV of one book
 def to_csv(datas, category):
    
@@ -106,30 +102,31 @@ def to_csv(datas, category):
 
 
 # scrapp all URL of books in mystery categorie 
-def links_books_of_category_mistery(list_url_category):
-    datas = []
+def from_list_url_to_categories_csv(list_url_category):
     for url_page_category in list_url_category:
+        datas = []
         print(url_page_category)
-        reponse = requests.get(url_page_category)
-        page = reponse.content
-        soup = BeautifulSoup(page, 'html.parser')
-        category = soup.find("h1").text.strip()   
-        for values in soup.find_all("h3"):
-            a = values.find("a")
-            href = a['href']
-            a_href_remplaced = href.replace("../../..", "http://books.toscrape.com/catalogue")
-            datas_of_one_book, category = scrapp_page_one_book(a_href_remplaced)
-            datas.append(datas_of_one_book) 
+        return_of_list_all_pages_of_catagory = list_all_pages_of_category(url_page_category)
+        for page_url in return_of_list_all_pages_of_catagory:
+            reponse = requests.get(page_url)
+            page = reponse.content
+            soup = BeautifulSoup(page, 'html.parser')
+            category = soup.find("h1").text.strip()   
+            for values in soup.find_all("h3"):
+                a = values.find("a")
+                href = a['href']
+                a_href_remplaced = href.replace("../../..", "http://books.toscrape.com/catalogue")
+                datas_of_one_book, category = scrap_page_one_book(a_href_remplaced)
+                datas.append(datas_of_one_book) 
         to_csv(datas, category)
-    return datas   
+    # return datas   
 
-# list_url_category = list_all_pages_of_category()
-# links_books_of_category_mistery(list_url_category)
 
 
 # Scrap all URL of category in home page
-def links_categories_home_page(url):
+def extract_all_links_categories_from_home_page(url):
     reponse = requests.get(url)
+    print(reponse)
     page = reponse.content
     soup = BeautifulSoup(page, 'html.parser')
     list_of_category = []
@@ -143,34 +140,11 @@ def links_categories_home_page(url):
 
 # links_categories_home_page("http://books.toscrape.com/index.html")
 
-# Fonction principale pour scraper toutes les catégories
+# Fonction to scrap all categories for all books
 def scrap_all_categories(url):
-    categories = links_categories_home_page(url)
-    links_books_of_category_mistery(categories)
-
-url = "http://books.toscrape.com/index.html"
-scrap_all_categories(url)
-
-
-
-
-
-    # while url:
-    #     reponse = requests.get(url)
-    #     page = reponse.content
-    #     soup = BeautifulSoup(page, 'html.parser')
-    #     product_pods = soup.find_all(class_="product-pod")
-    #     for product_pod in product_pods:
-    #         a = product_pod.find("a")
-    #         link = urljoin(url, a['href'])
-    #         links.append(link)
-    #     next_page = check_next_page(page)
-    #     url = urljoin(url, next_page) if next_page else None
-    # print("Nombre de livres trouvés :" + str(len(links)))
-
-        
-
-
+    categories = extract_all_links_categories_from_home_page(url)
+    from_list_url_to_categories_csv(categories)
     
+HOME_URL = "http://books.toscrape.com/index.html"
+scrap_all_categories(url=HOME_URL)
 
-print("*****")
