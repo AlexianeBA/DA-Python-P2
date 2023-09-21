@@ -1,6 +1,6 @@
 # DA-Python-P2
 Création d'un script de récupération des données du site https://books.toscrape.com/
-# Book to scrape
+# Books to scrape
 ![image](https://github.com/AlexianeBA/DA-Python-P2/assets/106927033/b081b2c6-29e7-4d2e-80f5-8885834696cf)
 
 Book to scrape est mon premier projet en Python dans le cadre de ma formation de Développeur d'Application Python via la plateforme de formation OpenClassrooms.
