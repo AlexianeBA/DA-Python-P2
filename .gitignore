@@ -1,3 +1,4 @@
 virtual_environment/
-*.csv
-*.jpg
+datas/
+images/
+headers.csv

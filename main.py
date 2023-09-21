@@ -13,6 +13,13 @@ except:
 # Scrap one page of one book   
 
 def scrap_page_one_book(url_book_of_one_book):
+    """ Récupération des données d'un livre, création d'une liste avec toutes ces données
+    Args: 
+        url_book_of_one_book: l'url de la page du livre
+    Retruns:
+        datas_of_one_book: liste des données d'un livre
+        category: nom de la catégorie
+    """
     html_livre = requests.get(url_book_of_one_book).content
     soup_livre = BeautifulSoup(html_livre, 'html.parser')
     table_livre=[]
@@ -29,12 +36,15 @@ def scrap_page_one_book(url_book_of_one_book):
     
     # price avec tax
     price_including_tax= table_livre[2].text.strip()
+    price_including_tax = price_including_tax.replace("£", "")
    
     # price sans tax
     price_excluding_tax = table_livre[3].text.strip()
+    price_excluding_tax = price_excluding_tax.replace("£", "")
     
     #number_available
     number_available = table_livre[5].text.strip()
+    number_available = re.sub(r'[^\d]', "", number_available)
     
     # product_description
     div_product_description = soup_livre.find("article", class_="product_page")
@@ -53,9 +63,22 @@ def scrap_page_one_book(url_book_of_one_book):
     category = list_a[3]
     
     # review_rating
-    review_rating = table_livre[6].text.strip()
+    review_rating = soup_livre.find_all("p", class_="star-rating")[0]
+    class_text = review_rating["class"][1]
+    match = re.search(r'\b(One|Two|Three|Four|Five)\b', class_text)
     
-    # img_url
+    if match:
+        star_rating_text = match.group(0)
+        star_rating = {
+            'One' : 1,
+            'Two' : 2,
+            'Three' : 3,
+            'Four' : 4,
+            'Five' : 5
+        }[star_rating_text]
+        
+
+    # img
     images = soup_livre.find_all('div', class_="item active")
     for image in images:
         image_url = image.find('img')['src']
@@ -63,7 +86,7 @@ def scrap_page_one_book(url_book_of_one_book):
         download_image = requests.get(image_url).content
     
       
-    datas_of_one_book = [product_page_url, upc, title, price_including_tax, price_excluding_tax, number_available,  prodcut_description, category, review_rating, image_url]
+    datas_of_one_book = [product_page_url, upc, title, price_including_tax, price_excluding_tax, number_available,  prodcut_description, category, star_rating, image_url]
     
     name_image = re.sub(r'[^\w\s.-]', '', title)
     if not os.path.exists("images"):
@@ -73,8 +96,15 @@ def scrap_page_one_book(url_book_of_one_book):
         
     return datas_of_one_book, category 
 
-# pagination
+# list of all urls of books from category by browsing each page of the category
 def list_all_pages_of_category(url_page_category):
+    """ Création d'une liste de tous les url des livres à partir d'une catégorie.
+    Args: 
+        url_page_category: url de la catégorie du livre concerné
+    
+    Retruns: 
+        list_url_category: listes des url de chaque categories
+    """
     print(url_page_category)
     list_url_category = [url_page_category]
     url_page_category=url_page_category.replace("/index.html", "")   
@@ -92,10 +122,16 @@ def list_all_pages_of_category(url_page_category):
             break
     return list_url_category
 
-# CSV of one book
+# create CSV
 def to_csv(datas, category):
-   
-    column_names=["product_page_url", "universal_ product_code (upc)", "title",  "price_including_tax", "price_excluding_tax", "number_available", "product_description", "category", "review_rating", "image_url"]
+    """ Convertie toutes les données récupérées dans un fichier csv pour une catégorie spécifique.
+    Args: 
+        datas: Liste des donnée d'un livre
+        category: Liste du nom des catégories.
+    
+    Retruns: None
+    """
+    column_names=["product_page_url", "universal_ product_code (upc)", "title",  "price_including_tax", "price_excluding_tax", "number_available", "product_description", "category", "star_rating", "image_url"]
     df = pd.DataFrame(datas, columns=column_names)
     df.to_csv("datas/"+category+".csv", index=False)
 
@@ -103,6 +139,10 @@ def to_csv(datas, category):
 
 # scrapp all URL of books in mystery categorie 
 def from_list_url_to_categories_csv(list_url_category):
+    """ Extrait les données depuis la liste des urls des catégories et les stockent dans un fichier csv.
+    Args: list_url_to_categorie: Liste des urls qui représentent les diférentes catégories
+    Retruns: None
+    """
     for url_page_category in list_url_category:
         datas = []
         print(url_page_category)
@@ -119,12 +159,18 @@ def from_list_url_to_categories_csv(list_url_category):
                 datas_of_one_book, category = scrap_page_one_book(a_href_remplaced)
                 datas.append(datas_of_one_book) 
         to_csv(datas, category)
-    # return datas   
+ 
 
 
 
 # Scrap all URL of category in home page
 def extract_all_links_categories_from_home_page(url):
+    """ Extrait tous les liens de chaque catégorie qui sont présent sur la page d'accueil
+    
+    Args: url: url de la page d'accueil
+    
+    Retruns: list_of_category: liste des url des catégories
+    """
     reponse = requests.get(url)
     print(reponse)
     page = reponse.content
@@ -134,14 +180,18 @@ def extract_all_links_categories_from_home_page(url):
     for a in category_books:
         a = urljoin(url, a['href'])
         list_of_category.append(a)
-        # print(list_of_category)
+    
     del list_of_category[0]
     return list_of_category
 
-# links_categories_home_page("http://books.toscrape.com/index.html")
 
 # Fonction to scrap all categories for all books
 def scrap_all_categories(url):
+    """ Extrait toutes les données de chaque catégories de livres présent dans le site et sauvgadre des éléments dans un fichier csv
+    
+    Args: url: url de la page d'accueil du site
+    Return: none.
+    """
     categories = extract_all_links_categories_from_home_page(url)
     from_list_url_to_categories_csv(categories)
     
