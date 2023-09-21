@@ -2,9 +2,9 @@
 Scrapping of website Book to Scrape
 
 # Book to scrape
+![image](https://github.com/AlexianeBA/DA-Python-P2/assets/106927033/b081b2c6-29e7-4d2e-80f5-8885834696cf)
 
 Book to scrape est mon premier projet en Python dans le cadre de ma formation de Développeur d'Application Python via la plateforme de formation OpenClassrooms.
-![image](https://github.com/AlexianeBA/DA-Python-P2/assets/106927033/b081b2c6-29e7-4d2e-80f5-8885834696cf)
 
 Contexte: 
 Nous travaillons en tant qu'analyste marketing pour une llibrairie en ligne spécialisée dans les livres d'occasions nomée Books Online.
