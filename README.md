@@ -1,6 +1,5 @@
 # DA-Python-P2
-Scrapping of website Book to Scrape
-
+Création d'un script de récupération des données du site https://books.toscrape.com/
 # Book to scrape
 ![image](https://github.com/AlexianeBA/DA-Python-P2/assets/106927033/b081b2c6-29e7-4d2e-80f5-8885834696cf)
 
