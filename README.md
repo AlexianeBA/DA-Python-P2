@@ -19,9 +19,16 @@ Pour exécuter ce script, l'installation de Python et des packages détaillés d
 Enfin, il faut cloner le repository suivant dans votre terminal :
 
     git clone https://github.com/AlexianeBA/DA-Python-P2
+
+Egalement, la création d'un environnement virtuel est nécessaire. Voici comment procéder en ligne de commande dans votre terminal :
+
+    python -m venv <nom_env_virtuel>
+    source nom_env_virtuel/bin/activate
+
+Si vous souhaitez sortir de cet environnement virtuel il suffit d'indiquer cette commande dans votre terminal :
+
+    deactivate
     
-
-
 ## Initialisation
 
 1- Installer les packages depuis le fichier requirements.txt
