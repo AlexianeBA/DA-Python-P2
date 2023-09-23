@@ -1,7 +1,7 @@
 # DA-Python-P2
-Scrapping of website Book to Scrape
-
-# Book to scrape
+Création d'un script de récupération des données du site https://books.toscrape.com/
+# Books to scrape
+![image](https://github.com/AlexianeBA/DA-Python-P2/assets/106927033/b081b2c6-29e7-4d2e-80f5-8885834696cf)
 
 Book to scrape est mon premier projet en Python dans le cadre de ma formation de Développeur d'Application Python via la plateforme de formation OpenClassrooms.
 
@@ -19,9 +19,16 @@ Pour exécuter ce script, l'installation de Python et des packages détaillés d
 Enfin, il faut cloner le repository suivant dans votre terminal :
 
     git clone https://github.com/AlexianeBA/DA-Python-P2
+
+Egalement, la création d'un environnement virtuel est nécessaire. Voici comment procéder en ligne de commande dans votre terminal :
+
+    python -m venv <nom_env_virtuel>
+    source nom_env_virtuel/bin/activate
+
+Si vous souhaitez sortir de cet environnement virtuel il suffit d'indiquer cette commande dans votre terminal :
+
+    deactivate
     
-
-
 ## Initialisation
 
 1- Installer les packages depuis le fichier requirements.txt
