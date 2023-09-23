@@ -85,16 +85,14 @@ class Book:
             image_url = image.find('img')['src']
             image_url = image_url.replace("../../", "http://books.toscrape.com/")
             download_image = requests.get(image_url).content
-        
-        
-        datas_of_one_book = [product_page_url, upc, title, price_including_tax, price_excluding_tax, number_available,  prodcut_description, category, star_rating, image_url]
-        
+
         name_image = re.sub(r'[^\w\s.-]', '', title)
         if not os.path.exists("images"):
             os.makedirs("images")
         with open("images/" + name_image + ".jpg", "wb") as handler:
             handler.write(download_image) 
-            
+         
+        datas_of_one_book = [product_page_url, upc, title, price_including_tax, price_excluding_tax, number_available,  prodcut_description, category, star_rating, image_url]
         return datas_of_one_book, category 
 
 # list of all urls of books from category by browsing each page of the category
